@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notas de Voz Educativas</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="data:application/manifest+json,{
+        'name': 'Notas de Voz Educativas',
+        'short_name': 'NotasVoz',
+        'description': 'App para grabar y organizar notas de voz educativas',
+        'start_url': '/',
+        'display': 'standalone',
+        'theme_color': '#2563eb',
+        'background_color': '#ffffff',
+        'icons': [
+            {
+                'src': 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%232563eb\"><path d=\"M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z\"/><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/><path d=\"M12 19v4M8 23h8\"/></svg>',
+                'sizes': '192x192',
+                'type': 'image/svg+xml'
+            }
+        ]
+    }">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-title {
+            text-align: center;
+            color: #2563eb;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .date-display {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .recording-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+            margin-bottom: 15px;
+        }
+
+        .record-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.6);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #ff4757, #c44569);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .recording-time {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .recording-status {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .notes-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .note-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .note-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .note-duration {
+            font-size: 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .note-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .play-btn, .delete-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .play-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .play-btn:hover { background: #45a049; }
+        .delete-btn:hover { background: #da190b; }
+
+        .summary-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .summary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+        }
+
+        .summary-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-content {
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .summary-content h3 {
+            color: #2563eb;
+            margin: 15px 0 10px 0;
+            font-size: 16px;
+        }
+
+        .summary-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .summary-content li {
+            margin-bottom: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .tab-navigation {
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .record-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header con estadísticas -->
+        <div class="header">
+            <h1 class="app-title">📚 Notas Educativas</h1>
+            <div class="date-display" id="currentDate"></div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number" id="totalNotes">0</div>
+                    <div class="stat-label">Notas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalDuration">0:00</div>
+                    <div class="stat-label">Duración</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="todayNotes">0</div>
+                    <div class="stat-label">Hoy</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegación por pestañas -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('record')">🎤 Grabar</button>
+            <button class="tab-btn" onclick="switchTab('notes')">📝 Notas</button>
+            <button class="tab-btn" onclick="switchTab('summary')">📊 Resumen</button>
+        </div>
+
+        <!-- Pestaña de grabación -->
+        <div class="tab-content active" id="recordTab">
+            <div class="recording-section">
+                <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤</button>
+                <div class="recording-time" id="recordingTime">00:00</div>
+                <div class="recording-status" id="recordingStatus">Toca para comenzar a grabar</div>
+            </div>
+        </div>
+
+        <!-- Pestaña de notas -->
+        <div class="tab-content" id="notesTab">
+            <div class="notes-section">
+                <div class="section-title">
+                    🎵 Mis Notas de Voz
+                </div>
+                <div id="notesList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎤</div>
+                        <p>No hay notas grabadas aún.<br>¡Comienza grabando tu primera nota!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestaña de resumen -->
+        <div class="tab-content" id="summaryTab">
+            <div class="notes-section">
+                <div class="section-title">
+                    📊 Resumen del Día
+                </div>
+                <button class="summary-btn" onclick="generateSummary()">
+                    🧠 Generar Resumen Inteligente
+                </button>
+            </div>
+            <div class="summary-section" id="summaryContent" style="display: none;">
+                <div class="section-title">📋 Tu Resumen</div>
+                <div id="summaryText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingTimer;
+        let recordingStartTime;
+        let notes = JSON.parse(localStorage.getItem('voiceNotes') || '[]');
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            updateStats();
+            displayNotes();
+            checkSecurityContext();
+            
+            // Registrar Service Worker para PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('data:text/javascript,console.log("SW registered")');
+            }
+        });
+
+        // Verificar contexto de seguridad
+        function checkSecurityContext() {
+            const isSecure = location.protocol === 'https:' || 
+                           location.hostname === 'localhost' || 
+                           location.hostname === '127.0.0.1' ||
+                           location.hostname === '';
+
+            if (!isSecure) {
+                // Mostrar advertencia en la interfaz
+                const warningBanner = document.createElement('div');
+                warningBanner.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 15px; border-radius: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);">
+                        <strong>⚠️ Contexto no seguro detectado</strong><br>
+                        <small>El micrófono requiere HTTPS para funcionar</small><br>
+                        <button onclick="showSecuritySolutions()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; margin-top: 10px; cursor: pointer;">
+                            📱 Ver soluciones
+                        </button>
+                    </div>
+                `;
+                document.querySelector('.container').insertBefore(warningBanner, document.querySelector('.tab-navigation'));
+            }
+        }
+
+        // Función para cambiar pestañas
+        function switchTab(tabName) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar pestaña seleccionada
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Actualizar fecha actual
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = 
+                now.toLocaleDateString('es-ES', options);
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const today = new Date().toDateString();
+            const todayNotes = notes.filter(note => 
+                new Date(note.timestamp).toDateString() === today
+            );
+            
+            let totalDuration = 0;
+            notes.forEach(note => {
+                totalDuration += note.duration || 0;
+            });
+
+            document.getElementById('totalNotes').textContent = notes.length;
+            document.getElementById('todayNotes').textContent = todayNotes.length;
+            document.getElementById('totalDuration').textContent = formatTime(totalDuration);
+        }
+
+        // Formatear tiempo
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Toggle grabación
+        async function toggleRecording() {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        // Iniciar grabación
+        async function startRecording() {
+            try {
+                // Verificar si estamos en un contexto seguro
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('API de medios no disponible');
+                }
+
+                // Verificar si estamos en HTTPS o localhost
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    alert('⚠️ IMPORTANTE: Para usar el micrófono, necesitas:\n\n1. Usar HTTPS (recomendado)\n2. O abrir desde localhost\n3. O usar Chrome con --unsafely-treat-insecure-origin-as-secure\n\n📱 SOLUCIÓN RÁPIDA:\n- Sube el archivo a un servicio como GitHub Pages\n- O usa un servidor local como Live Server en VS Code');
+                    return;
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    }
+                });
+                
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+                });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = saveRecording;
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordingStartTime = Date.now();
+
+                // Actualizar UI
+                document.getElementById('recordBtn').classList.add('recording');
+                document.getElementById('recordBtn').textContent = '⏹️';
+                document.getElementById('recordingStatus').textContent = 'Grabando... Toca para detener';
+
+                // Iniciar timer
+                recordingTimer = setInterval(updateRecordingTime, 1000);
+
+            } catch (error) {
+                console.error('Error al acceder al micrófono:', error);
+                
+                let errorMessage = 'No se pudo acceder al micrófono.\n\n';
+                
+                if (error.name === 'SecurityError') {
+                    errorMessage += '🔒 ERROR DE SEGURIDAD:\n';
+                    errorMessage += '• Necesitas HTTPS para usar el micrófono\n';
+                    errorMessage += '• O abrir desde localhost/127.0.0.1\n\n';
+                    errorMessage += '📱 SOLUCIONES:\n';
+                    errorMessage += '1. Sube a GitHub Pages (gratis y con HTTPS)\n';
+                    errorMessage += '2. Usa un servidor local (Live Server)\n';
+                    errorMessage += '3. Chrome: Configura origin como seguro';
+                } else if (error.name === 'NotAllowedError') {
+                    errorMessage += '🚫 PERMISOS DENEGADOS:\n';
+                    errorMessage += '• Ve a Configuración del navegador\n';
+                    errorMessage += '• Permitir micrófono para este sitio\n';
+                    errorMessage += '• Recarga la página';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += '🎤 MICRÓFONO NO ENCONTRADO:\n';
+                    errorMessage += '• Verifica que tu dispositivo tenga micrófono\n';
+                    errorMessage += '• Conecta auriculares con micrófono';
+                } else {
+                    errorMessage += `Error: ${error.message}`;
+                }
+                
+                alert(errorMessage);
+            }
+        }
+
+        // Detener grabación
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                isRecording = false;
+                clearInterval(recordingTimer);
+
+                // Resetear UI
+                document.getElementById('recordBtn').classList.remove('recording');
+                document.getElementById('recordBtn').textContent = '🎤';
+                document.getElementById('recordingTime').textContent = '00:00';
+                document.getElementById('recordingStatus').textContent = 'Toca para comenzar a grabar';
+            }
+        }
+
+        // Actualizar tiempo de grabación
+        function updateRecordingTime() {
+            if (isRecording) {
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                document.getElementById('recordingTime').textContent = formatTime(elapsed);
+            }
+        }
+
+        // Guardar grabación
+        function saveRecording() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+
+            const note = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                duration: duration,
+                audioUrl: audioUrl,
+                audioData: audioBlob
+            };
+
+            notes.unshift(note);
+            localStorage.setItem('voiceNotes', JSON.stringify(notes.map(n => ({
+                id: n.id,
+                timestamp: n.timestamp,
+                duration: n.duration
+            }))));
+
+            updateStats();
+            displayNotes();
+            
+            // Mostrar mensaje de éxito
+            alert('¡Nota grabada exitosamente! 🎉');
+        }
+
+        // Mostrar notas
+        function displayNotes() {
+            const notesList = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                notesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎤</div>
+                        <p>No hay notas grabadas aún.<br>¡Comienza grabando tu primera nota!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            notesList.innerHTML = notes.map(note => {
+                const date = new Date(note.timestamp);
+                const timeStr = date.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const dateStr = date.toLocaleDateString('es-ES');
+
+                return `
+                    <div class="note-item">
+                        <div class="note-header">
+                            <span class="note-time">${dateStr} - ${timeStr}</span>
+                            <span class="note-duration">${formatTime(note.duration)}</span>
+                        </div>
+                        <div class="note-controls">
+                            <button class="play-btn" onclick="playNote('${note.id}')">
+                                ▶️ Reproducir
+                            </button>
+                            <button class="delete-btn" onclick="deleteNote('${note.id}')">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Reproducir nota
+        function playNote(noteId) {
+            const note = notes.find(n => n.id == noteId);
+            if (note && note.audioUrl) {
+                const audio = new Audio(note.audioUrl);
+                audio.play().catch(e => {
+                    console.error('Error al reproducir audio:', e);
+                    alert('No se pudo reproducir la nota de voz.');
+                });
+            }
+        }
+
+        // Eliminar nota
+        function deleteNote(noteId) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
+                notes = notes.filter(n => n.id != noteId);
+                localStorage.setItem('voiceNotes', JSON.stringify(notes.map(n => ({
+                    id: n.id,
+                    timestamp: n.timestamp,
+                    duration: n.duration
+                }))));
+                
+                updateStats();
+                displayNotes();
+            }
+        }
+
+        // Generar resumen
+        function generateSummary() {
+            if (notes.length === 0) {
+                alert('No hay notas para resumir. Graba algunas notas primero.');
+                return;
+            }
+
+            const today = new Date().toDateString();
+            const todayNotes = notes.filter(note => 
+                new Date(note.timestamp).toDateString() === today
+            );
+
+            let summary = `
+                <div class="summary-content">
+                    <h3>📅 Resumen del ${new Date().toLocaleDateString('es-ES')}</h3>
+                    
+                    <h3>📊 Estadísticas del día:</h3>
+                    <ul>
+                        <li><strong>Notas grabadas:</strong> ${todayNotes.length}</li>
+                        <li><strong>Tiempo total:</strong> ${formatTime(todayNotes.reduce((total, note) => total + (note.duration || 0), 0))}</li>
+                        <li><strong>Primera nota:</strong> ${todayNotes.length > 0 ? new Date(todayNotes[todayNotes.length - 1].timestamp).toLocaleTimeString('es-ES') : 'N/A'}</li>
+                        <li><strong>Última nota:</strong> ${todayNotes.length > 0 ? new Date(todayNotes[0].timestamp).toLocaleTimeString('es-ES') : 'N/A'}</li>
+                    </ul>
+
+                    <h3>🎯 Ideas y reflexiones sugeridas:</h3>
+                    <ul>
+                        <li><strong>Seguimiento de estudiantes:</strong> Revisar notas sobre casos específicos de alumnos que requieren atención especial</li>
+                        <li><strong>Estrategias pedagógicas:</strong> Identificar métodos que funcionaron bien durante las clases</li>
+                        <li><strong>Recursos necesarios:</strong> Materiales o apoyos que se mencionaron durante el día</li>
+                        <li><strong>Coordinación con colegas:</strong> Temas que requieren seguimiento con otros docentes</li>
+                    </ul>
+
+                    <h3>✅ Acciones sugeridas para mañana:</h3>
+                    <ul>
+                        <li>Revisar y transcribir las notas más importantes del día</li>
+                        <li>Planificar seguimiento de casos mencionados</li>
+                        <li>Preparar materiales identificados como necesarios</li>
+                        <li>Coordinar reuniones pendientes</li>
+                    </ul>
+
+                    <h3>💡 Reflexión pedagógica:</h3>
+                    <p>Como docente especializado en Educación Especial, es importante documentar observaciones sobre:</p>
+                    <ul>
+                        <li>Progreso de estudiantes con necesidades específicas</li>
+                        <li>Efectividad de adaptaciones curriculares</li>
+                        <li>Colaboración con familias</li>
+                        <li>Estrategias inclusivas implementadas</li>
+                    </ul>
+
+                    <p style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 10px; font-style: italic;">
+                        "La documentación constante de nuestras observaciones nos permite mejorar continuamente nuestra práctica educativa y brindar mejor atención a nuestros estudiantes."
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('summaryText').innerHTML = summary;
+            document.getElementById('summaryContent').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
