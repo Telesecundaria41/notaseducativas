@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Cotejo para Retroalimentación</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.4;
+  color: #333;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 15px;
+}
+
+h1, h2 {
+  color: #2c3e50;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+h1 {
+  text-align: center;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
+}
+
+.header-info {
+  text-align: center;
+  margin-bottom: 2px;
+  font-size: 16px;
+}
+
+.section {
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 4px 6px;
+}
+
+th {
+  background-color: #3498db;
+  color: white;
+  text-align: left;
+  font-size: 14px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 10px;
+}
+
+.reflection-area {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+.instructions {
+  background-color: #eaf2f8;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.student-info {
+  margin: 15px 0;
+}
+
+.student-info input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+@media print {
+  body {
+    font-size: 11px;
+    margin: 0 auto;
+    transform: scale(1.0);
+    transform-origin: top left;
+  }
+  
+  .button-container {
+    display: none;
+  }
+  
+  .section {
+    break-inside: avoid;
+    border: none;
+    padding: 3px;
+    margin-bottom: 10px;
+  }
+  
+  h1 {
+    font-size: 16px;
+    margin-top: 0;
+    padding-bottom: 5px;
+  }
+  
+  h2 {
+    font-size: 14px;
+    margin-top: 8px;
+    margin-bottom: 5px;
+  }
+  
+  th, td {
+    padding: 2px 4px;
+  }
+  
+  input[type="radio"] {
+    margin: 0;
+  }
+  
+  .header-info {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+}
+</style>
+</head>
+<body>
+<h1>Lista de Cotejo para Retroalimentación de Textos</h1>
+
+<div class="header-info">
+<p><strong>Campo formativo:</strong> Lenguajes</p>
+<p><strong>Proyecto Académico 28.</strong> Maneras de imaginar y ser escritor</p>
+</div>
+
+<div class="instructions">
+<p><strong>Instrucciones:</strong> Evalúa la retroalimentación proporcionada a los textos de tus compañeros, marcando "Sí" si se cumplió el criterio o "No" si no se cumplió.</p>
+</div>
+
+<div class="student-info">
+<label for="studentName"><strong>Nombre del estudiante:</strong></label>
+<input type="text" id="studentName" name="studentName" placeholder="Escribe tu nombre completo">
+</div>
+
+<form id="feedbackForm">
+<div class="section">
+  <h2>1. Aspectos de Retroalimentación Positiva</h2>
+  <table>
+    <tr>
+      <th style="width: 80%">Criterio</th>
+      <th style="width: 20%">Cumplimiento</th>
+    </tr>
+    <tr>
+      <td>Identifiqué dos fortalezas específicas del texto (dos estrellas)</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria1" value="si"> Sí</label>
+          <label><input type="radio" name="criteria1" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Utilicé ejemplos concretos del texto para respaldar mis comentarios positivos</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria2" value="si"> Sí</label>
+          <label><input type="radio" name="criteria2" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Expresé con claridad por qué considero valiosos estos aspectos</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria3" value="si"> Sí</label>
+          <label><input type="radio" name="criteria3" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Mencioné el impacto positivo que tienen estas fortalezas en el texto</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria4" value="si"> Sí</label>
+          <label><input type="radio" name="criteria4" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Evité comentarios genéricos, siendo específico en mis observaciones</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria5" value="si"> Sí</label>
+          <label><input type="radio" name="criteria5" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>2. Aspectos de Mejora Constructiva</h2>
+  <table>
+    <tr>
+      <th style="width: 80%">Criterio</th>
+      <th style="width: 20%">Cumplimiento</th>
+    </tr>
+    <tr>
+      <td>Identifiqué un aspecto a mejorar (un deseo) de manera respetuosa</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria6" value="si"> Sí</label>
+          <label><input type="radio" name="criteria6" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Formulé sugerencias concretas y aplicables</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria7" value="si"> Sí</label>
+          <label><input type="radio" name="criteria7" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Presenté la sugerencia como una oportunidad de crecimiento</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria8" value="si"> Sí</label>
+          <label><input type="radio" name="criteria8" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Evité un tono crítico o negativo al expresar el aspecto a mejorar</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria9" value="si"> Sí</label>
+          <label><input type="radio" name="criteria9" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Ofrecí recursos o ideas específicas para implementar la mejora</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria10" value="si"> Sí</label>
+          <label><input type="radio" name="criteria10" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>3. Actitudes durante el Proceso de Retroalimentación</h2>
+  <table>
+    <tr>
+      <th style="width: 80%">Criterio</th>
+      <th style="width: 20%">Cumplimiento</th>
+    </tr>
+    <tr>
+      <td>Escuché atentamente cuando el autor explicó su texto</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria11" value="si"> Sí</label>
+          <label><input type="radio" name="criteria11" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Mantuve contacto visual y postura corporal receptiva</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria12" value="si"> Sí</label>
+          <label><input type="radio" name="criteria12" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Evité interrumpir cuando el autor respondía a mis comentarios</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria13" value="si"> Sí</label>
+          <label><input type="radio" name="criteria13" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Mostré apertura a diferentes perspectivas y enfoques</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria14" value="si"> Sí</label>
+          <label><input type="radio" name="criteria14" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Respeté los silencios necesarios para la reflexión</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria15" value="si"> Sí</label>
+          <label><input type="radio" name="criteria15" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>4. Comunicación Respetuosa</h2>
+  <table>
+    <tr>
+      <th style="width: 80%">Criterio</th>
+      <th style="width: 20%">Cumplimiento</th>
+    </tr>
+    <tr>
+      <td>Utilicé un lenguaje respetuoso y constructivo</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria16" value="si"> Sí</label>
+          <label><input type="radio" name="criteria16" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Enfoqué mis comentarios en el texto, no en la persona</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria17" value="si"> Sí</label>
+          <label><input type="radio" name="criteria17" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Reconocí el esfuerzo y trabajo invertido por el autor</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria18" value="si"> Sí</label>
+          <label><input type="radio" name="criteria18" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Formulé mis observaciones como sugerencias, no como imposiciones</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria19" value="si"> Sí</label>
+          <label><input type="radio" name="criteria19" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Evité comparaciones con otros textos o autores</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria20" value="si"> Sí</label>
+          <label><input type="radio" name="criteria20" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>5. Impacto y Compromiso</h2>
+  <table>
+    <tr>
+      <th style="width: 80%">Criterio</th>
+      <th style="width: 20%">Cumplimiento</th>
+    </tr>
+    <tr>
+      <td>Mis comentarios fomentaron el compromiso del autor con su texto</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria21" value="si"> Sí</label>
+          <label><input type="radio" name="criteria21" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Ofrecí apoyo para implementar las sugerencias de mejora</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria22" value="si"> Sí</label>
+          <label><input type="radio" name="criteria22" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Transmití confianza en la capacidad del autor para mejorar</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria23" value="si"> Sí</label>
+          <label><input type="radio" name="criteria23" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Reconocí el error como parte natural del aprendizaje</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria24" value="si"> Sí</label>
+          <label><input type="radio" name="criteria24" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Generé un ambiente de colaboración y crecimiento mutuo</td>
+      <td>
+        <div class="radio-group">
+          <label><input type="radio" name="criteria25" value="si"> Sí</label>
+          <label><input type="radio" name="criteria25" value="no"> No</label>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Reflexión Final</h2>
+  <p><strong>¿Cómo contribuyó mi retroalimentación al desarrollo del texto y del autor?</strong></p>
+  <textarea class="reflection-area" name="reflection1"></textarea>
+  
+  <p><strong>¿Qué aprendí durante este proceso de retroalimentación que puedo aplicar a mi propio trabajo?</strong></p>
+  <textarea class="reflection-area" name="reflection2"></textarea>
+</div>
+
+<div class="button-container">
+  <button type="button" id="printButton">Imprimir</button>
+  <button type="reset">Limpiar Formulario</button>
+</div>
+</form>
+
+<script>
+document.getElementById('printButton').addEventListener('click', function() {
+  window.print();
+});
+</script>
+</body>
+</html>
