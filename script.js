@@ -11,6 +11,7 @@ let recordingInterval;
 let currentFilter = 'todas';
 let mediaRecorder = null;
 let audioChunks = [];
+let currentStream = null;
 
 // Sample notes data with localStorage persistence
 let notes = JSON.parse(localStorage.getItem('notes')) || [
@@ -68,14 +69,51 @@ let settings = JSON.parse(localStorage.getItem('settings')) || {
     notifications: true
 };
 
+// Speech recognition setup
+let recognition = null;
+let transcriptionText = '';
+
 // Initialize the application
 function initializeApp() {
     setupEventListeners();
     renderNotes();
     updateStatistics();
     updateSettingsUI();
-    requestMicrophonePermission();
+    setupSpeechRecognition();
     detectLocation();
+    
+    // Show initial tab
+    showTab('grabar');
+}
+
+// Setup speech recognition
+function setupSpeechRecognition() {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'es-ES';
+        
+        recognition.onresult = function(event) {
+            let finalTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                }
+            }
+            
+            if (finalTranscript) {
+                transcriptionText += finalTranscript + ' ';
+            }
+        };
+        
+        recognition.onerror = function(event) {
+            console.log('Speech recognition error:', event.error);
+        };
+    }
 }
 
 // Setup all event listeners
@@ -120,23 +158,27 @@ function setupEventListeners() {
     document.addEventListener('keydown', handleKeyboardShortcuts);
 }
 
-// Navigation functionality
+// Navigation functionality - CORREGIDO
 function showTab(tabName) {
-    // Hide all tabs
+    // Hide all tabs completely
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.add('hidden');
         tab.classList.remove('flex');
+        tab.style.display = 'none'; // Forzar ocultación
     });
 
     // Show selected tab
     const selectedTab = document.getElementById(tabName + '-tab');
-    selectedTab.classList.remove('hidden');
-    if (tabName === 'grabar') {
-        selectedTab.classList.add('flex');
-    } else {
-        selectedTab.classList.add('flex');
+    if (selectedTab) {
+        selectedTab.classList.remove('hidden');
         selectedTab.style.display = 'flex';
         selectedTab.style.flexDirection = 'column';
+        
+        // Para la pestaña de grabar, usar flex con centrado
+        if (tabName === 'grabar') {
+            selectedTab.style.justifyContent = 'center';
+            selectedTab.style.alignItems = 'center';
+        }
     }
 
     // Update navigation buttons
@@ -146,25 +188,16 @@ function showTab(tabName) {
     });
 
     const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-    activeBtn.classList.remove('text-gray-600');
-    activeBtn.classList.add('text-blue-500', 'bg-blue-50');
+    if (activeBtn) {
+        activeBtn.classList.remove('text-gray-600');
+        activeBtn.classList.add('text-blue-500', 'bg-blue-50');
+    }
 
     // Refresh icons after tab change
     setTimeout(() => lucide.createIcons(), 100);
 }
 
-// Recording functionality
-async function requestMicrophonePermission() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        console.log('Microphone permission granted');
-    } catch (error) {
-        console.error('Microphone permission denied:', error);
-        showNotification('Permiso de micrófono requerido para grabar notas', 'error');
-    }
-}
-
+// Recording functionality - CORREGIDO
 async function toggleRecording() {
     if (!isRecording) {
         await startRecording();
@@ -175,22 +208,67 @@ async function toggleRecording() {
 
 async function startRecording() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Verificar soporte para getUserMedia
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('getUserMedia no está soportado en este navegador');
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                sampleRate: 44100
+            } 
+        });
         
-        mediaRecorder = new MediaRecorder(stream);
+        currentStream = stream;
+        
+        // Verificar soporte para MediaRecorder
+        if (!MediaRecorder.isTypeSupported('audio/webm')) {
+            console.log('audio/webm no soportado, usando formato por defecto');
+        }
+        
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+        });
+        
         audioChunks = [];
+        transcriptionText = '';
         
         mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
         };
         
         mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
             const audioUrl = URL.createObjectURL(audioBlob);
             saveNote(audioUrl);
+            
+            // Limpiar stream
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
         };
         
-        mediaRecorder.start();
+        mediaRecorder.onerror = (event) => {
+            console.error('MediaRecorder error:', event.error);
+            showNotification('Error en la grabación: ' + event.error, 'error');
+        };
+        
+        // Iniciar grabación
+        mediaRecorder.start(1000); // Recopilar datos cada segundo
+        
+        // Iniciar reconocimiento de voz si está disponible
+        if (recognition && settings.transcription) {
+            try {
+                recognition.start();
+            } catch (error) {
+                console.log('Speech recognition no disponible:', error);
+            }
+        }
         
         // Update UI
         isRecording = true;
@@ -217,20 +295,53 @@ async function startRecording() {
             updateTimer();
         }, 1000);
         
-        showNotification('Grabación iniciada', 'success');
+        showNotification('Grabación iniciada correctamente', 'success');
         
     } catch (error) {
         console.error('Error starting recording:', error);
-        showNotification('Error al iniciar la grabación', 'error');
+        let errorMessage = 'Error al acceder al micrófono';
+        
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Permiso de micrófono denegado. Por favor, permite el acceso al micrófono.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage = 'No se encontró ningún micrófono disponible.';
+        } else if (error.name === 'NotSupportedError') {
+            errorMessage = 'La grabación de audio no está soportada en este navegador.';
+        }
+        
+        showNotification(errorMessage, 'error');
+        
+        // Resetear UI en caso de error
+        resetRecordingUI();
     }
 }
 
 function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    try {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+        
+        if (recognition) {
+            recognition.stop();
+        }
+        
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+        
+        resetRecordingUI();
+        showNotification('Grabación finalizada correctamente', 'success');
+        
+    } catch (error) {
+        console.error('Error stopping recording:', error);
+        showNotification('Error al finalizar la grabación', 'error');
+        resetRecordingUI();
     }
-    
+}
+
+function resetRecordingUI() {
     // Update UI
     const recordBtn = document.getElementById('record-btn');
     const recordingTimer = document.getElementById('recording-timer');
@@ -248,8 +359,6 @@ function stopRecording() {
     
     recordingTimer.classList.add('hidden');
     recordingVisualizer.classList.add('hidden');
-    
-    showNotification('Grabación finalizada', 'success');
 }
 
 function updateTimer() {
@@ -279,13 +388,19 @@ function saveNote(audioUrl = null) {
     const timeString = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     const dateString = now.toISOString().split('T')[0];
     
+    // Usar transcripción real si está disponible
+    let content = transcriptionText.trim();
+    if (!content) {
+        content = "Transcripción no disponible. La nota de audio se ha guardado correctamente.";
+    }
+    
     const newNote = {
         id: Date.now(),
         title: customTag || `Nota de voz ${notes.length + 1}`,
-        content: "Transcripción automática en proceso... Esta nota fue grabada y será procesada para generar el texto correspondiente.",
+        content: content,
         time: timeString,
         date: dateString,
-        category: detectCategory(customTag),
+        category: detectCategory(customTag || content),
         location: getCurrentLocation(),
         duration: `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`,
         audioUrl: audioUrl
@@ -300,19 +415,14 @@ function saveNote(audioUrl = null) {
     renderNotes();
     updateStatistics();
     
-    // Simulate transcription after a delay
-    setTimeout(() => {
-        simulateTranscription(newNote.id);
-    }, 2000);
-    
     showNotification('Nota guardada exitosamente', 'success');
 }
 
 function detectCategory(title) {
-    const workKeywords = ['reunión', 'trabajo', 'proyecto', 'equipo', 'cliente'];
-    const personalKeywords = ['compras', 'familia', 'personal', 'casa'];
-    const ideaKeywords = ['idea', 'innovación', 'concepto', 'propuesta'];
-    const taskKeywords = ['tarea', 'pendiente', 'hacer', 'revisar'];
+    const workKeywords = ['reunión', 'trabajo', 'proyecto', 'equipo', 'cliente', 'oficina', 'empresa'];
+    const personalKeywords = ['compras', 'familia', 'personal', 'casa', 'cumpleaños'];
+    const ideaKeywords = ['idea', 'innovación', 'concepto', 'propuesta', 'implementar'];
+    const taskKeywords = ['tarea', 'pendiente', 'hacer', 'revisar', 'completar'];
     
     const titleLower = title.toLowerCase();
     
@@ -322,23 +432,6 @@ function detectCategory(title) {
     if (taskKeywords.some(keyword => titleLower.includes(keyword))) return 'tareas';
     
     return 'personal';
-}
-
-function simulateTranscription(noteId) {
-    const note = notes.find(n => n.id === noteId);
-    if (note) {
-        const transcriptions = [
-            "En esta reunión discutimos los objetivos del próximo trimestre y las estrategias de marketing digital que implementaremos.",
-            "Ideas importantes para mejorar la experiencia del usuario en nuestra aplicación móvil y web.",
-            "Lista de tareas pendientes para completar antes del fin de semana, incluyendo revisiones de código.",
-            "Notas personales sobre planificación familiar y actividades del fin de semana."
-        ];
-        
-        note.content = transcriptions[Math.floor(Math.random() * transcriptions.length)];
-        localStorage.setItem('notes', JSON.stringify(notes));
-        renderNotes();
-        showNotification('Transcripción completada', 'info');
-    }
 }
 
 // Notes functionality
